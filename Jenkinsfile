@@ -1,42 +1,32 @@
 pipeline {
     agent any
-    environment {
-        PYTHONUNBUFFERED = '1'
-    }
+
     stages {
         stage('Clone Repository') {
             steps {
-                git credentialsId: 'github-credentials', url: 'https://github.com/sharmaanku/my-api.git', branch: 'main'
-            }
+                git credentialsId: 'github-credentials', 
+                    url: 'https://github.com/sharmaanku/my-api.git', 
+                    branch: 'main'
             }
         }
-        stage('Setup Python') {
+
+        stage('Build') {
             steps {
-                sh 'apt update && apt install -y python3 python3-pip'
+                sh 'echo "Building the project..."'
+                sh 'mkdir -p build && touch build/artifact.txt'
             }
         }
-        stage('Install Dependencies') {
-            steps {
-                sh 'pip3 install -r requirements.txt || true'
-            }
-        }
+
         stage('Run Unit Tests') {
             steps {
-                script {
-                    def test_result = sh(script: 'python3 -m unittest discover', returnStatus: true)
-                    if (test_result != 0) {
-                        error('❌ Tests Failed! Stopping Pipeline.')
-                    }
-                }
+                sh 'echo "Running unit tests..."'
+                sh 'python3 -m unittest discover tests'
             }
         }
-        stage('Deploy Application') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
+
+        stage('Deploy') {
             steps {
-                echo '✅ All Tests Passed. Deploying Application...'
-                sh 'echo "🚀 Deployment Successful!"'
+                sh 'echo "Deploying application..."'
             }
         }
     }
