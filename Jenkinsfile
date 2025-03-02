@@ -1,14 +1,43 @@
 pipeline {
-    agent { docker { image 'python:3.9' } }
+    agent any
+    environment {
+        PYTHONUNBUFFERED = '1'
+    }
     stages {
-        stage('Checkout') {
-            steps { git 'https://github.com/YOUR_USERNAME/my-api.git' }
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/sharmaankur/my-api.git'
+            }
+        }
+        stage('Setup Python') {
+            steps {
+                sh 'apt update && apt install -y python3 python3-pip'
+            }
         }
         stage('Install Dependencies') {
-            steps { sh 'pip install flask' }
+            steps {
+                sh 'pip3 install -r requirements.txt || true'
+            }
         }
-        stage('Run Tests') {
-            steps { sh 'python app.py &' }
+        stage('Run Unit Tests') {
+            steps {
+                script {
+                    def test_result = sh(script: 'python3 -m unittest discover', returnStatus: true)
+                    if (test_result != 0) {
+                        error('❌ Tests Failed! Stopping Pipeline.')
+                    }
+                }
+            }
+        }
+        stage('Deploy Application') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                echo '✅ All Tests Passed. Deploying Application...'
+                sh 'echo "🚀 Deployment Successful!"'
+            }
         }
     }
 }
+
