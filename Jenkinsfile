@@ -6,7 +6,8 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/sharmaankur/my-api.git'
+                git credentialsId: 'github-credentials', url: 'https://github.com/sharmaanku/my-api.git', branch: 'main'
+            }
             }
         }
         stage('Setup Python') {
